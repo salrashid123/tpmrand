@@ -69,6 +69,18 @@ func main() {
 
 ```
 
+---
+
+While you're here, some other references on TPMs and usage:
+
+* [Trusted Platform Module (TPM) recipes with tpm2_tools and go-tpm](https://github.com/salrashid123/tpm2)
+* [golang-jwt for Trusted Platform Module (TPM)](https://github.com/salrashid123/golang-jwt-tpm)
+* [golang-jwt for PKCS11](https://github.com/salrashid123/golang-jwt-pkcs11)
+* [TPM Remote Attestation protocol using go-tpm and gRPC](https://github.com/salrashid123/go_tpm_remote_attestation)
+* [crypto.Signer, implementations for Google Cloud KMS and Trusted Platform Modules](https://github.com/salrashid123/signer)
+
+---
+
 ### PKCS-11
 
 [ThalesIgnite crypto11.NewRandomReader()](https://pkg.go.dev/github.com/ThalesIgnite/crypto11#Context.NewRandomReader) is an alternative to this library but requires installing [tpm2-pkcs11](https://github.com/tpm2-software/tpm2-pkcs11) first on the library.

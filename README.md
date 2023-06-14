@@ -39,7 +39,6 @@ func main() {
 		fmt.Printf("%v\n", err)
 		return
 	}
-	defer r.Shutdown()
 
 	// Rand read
 	_, err = r.Read(randomBytes)

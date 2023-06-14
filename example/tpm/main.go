@@ -7,6 +7,9 @@ import (
 	"encoding/pem"
 	"fmt"
 
+	//"time"
+
+	//"github.com/cenkalti/backoff/v4"
 	tpmrand "github.com/salrashid123/tpmrand"
 )
 
@@ -14,12 +17,12 @@ func main() {
 	randomBytes := make([]byte, 32)
 	r, err := tpmrand.NewTPMRand(&tpmrand.Reader{
 		TpmDevice: "/dev/tpm0",
+		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return
 	}
-	defer r.Shutdown()
 	// Rand read
 	_, err = r.Read(randomBytes)
 	if err != nil {

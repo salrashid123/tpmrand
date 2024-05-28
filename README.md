@@ -21,29 +21,16 @@ From there, the usage is simple:
 package main
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
-	"flag"
-	"fmt"
-
-	//"time"
 	"github.com/google/go-tpm/tpmutil"
 	//"github.com/cenkalti/backoff/v4"
 	tpmrand "github.com/salrashid123/tpmrand"
 )
 
-var (
-	tpmPath = flag.String("tpm-path", "/dev/tpm0", "Path to the TPM device (character device or a Unix socket).")
-)
+var ()
 
 func main() {
 
-	rwc, err := tpmutil.OpenTPM(*tpmPath)
-	if err != nil {
-		log.Fatalf("can't open TPM %q: %v", *tpmPath, err)
-	}
+	rwc, err := tpmutil.OpenTPM("/dev/tpm0")
 	defer rwc.Close()
 
 	randomBytes := make([]byte, 32)
@@ -52,26 +39,14 @@ func main() {
 		//Encrypted: true,
 		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		return
-	}
+
 	// Rand read
 	_, err = r.Read(randomBytes)
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		return
-	}
-	fmt.Printf("Random String :%s\n", base64.StdEncoding.EncodeToString(randomBytes))
 
-	fmt.Println()
+	fmt.Printf("Random String :%s\n", base64.StdEncoding.EncodeToString(randomBytes))
 
 	// /// RSA keygen
 	privkey, err := rsa.GenerateKey(r, 2048)
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		return
-	}
 
 	keyPEM := pem.EncodeToMemory(
 		&pem.Block{
@@ -81,7 +56,6 @@ func main() {
 	)
 	fmt.Printf("RSA Key: \n%s\n", keyPEM)
 }
-
 ```
 
 ### Encrypted Session

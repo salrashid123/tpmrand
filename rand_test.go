@@ -26,6 +26,25 @@ func TestRandBytes(t *testing.T) {
 	require.Equal(t, len(randomBytes), 32)
 }
 
+func TestRandBytesEncrypted(t *testing.T) {
+	tpmDevice, err := simulator.Get()
+	require.NoError(t, err)
+	defer tpmDevice.Close()
+
+	randomBytes := make([]byte, 32)
+	r, err := NewTPMRand(&Reader{
+		TpmDevice: tpmDevice,
+		Encrypted: true,
+		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
+	})
+	require.NoError(t, err)
+
+	_, err = r.Read(randomBytes)
+	require.NoError(t, err)
+
+	require.Equal(t, len(randomBytes), 32)
+}
+
 func TestRSAKey(t *testing.T) {
 	tpmDevice, err := simulator.Get()
 	require.NoError(t, err)

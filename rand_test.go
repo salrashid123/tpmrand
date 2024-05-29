@@ -20,9 +20,9 @@ func TestRandBytes(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = r.Read(randomBytes)
+	i, err := r.Read(randomBytes)
 	require.NoError(t, err)
-
+	require.Equal(t, len(randomBytes), i)
 	require.Equal(t, len(randomBytes), 32)
 }
 

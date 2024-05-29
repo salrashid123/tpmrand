@@ -1,4 +1,4 @@
-## TPM and PKCS-11 backed crypto/rand Reader   
+## TPM backed crypto/rand Reader   
 
 A [crypto.rand](https://pkg.go.dev/crypto/rand) reader that uses a [Trusted Platform Module (TPM)](https://en.wikipedia.org/wiki/Trusted_Platform_Module) as the source of randomness.
 

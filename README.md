@@ -36,7 +36,6 @@ func main() {
 	randomBytes := make([]byte, 32)
 	r, err := tpmrand.NewTPMRand(&tpmrand.Reader{
 		TpmDevice: rwc,
-		//Encrypted: true,
 		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
 
@@ -104,7 +103,7 @@ $ go run main.go --tpm-path=simulator
 - [CPU to TPM Bus Protection Guidance](https://trustedcomputinggroup.org/wp-content/uploads/TCG_CPU_TPM_Bus_Protection_Guidance_Passive_Attack_Mitigation_8May23-3.pdf)
 - [Protecting Secrets At Tpm Interface](https://tpm2-software.github.io/2021/02/17/Protecting-secrets-at-TPM-interface.html)
 
-Transport encryption is disabled by default so to enable, pass `Encrypted: true,` during initialization
+Transport encryption is disabled by default so to enable it, pass a known asymmetric key in first that you know to be on the TPM (eg an EK) as the `EncryptionHandle` and `EncryptionPub`.
 
 for reference with `tpm2_tools`, you can find the test cases [here](https://github.com/tpm2-software/tpm2-tools/blob/master/test/integration/tests/getrandom.sh#L35)
 

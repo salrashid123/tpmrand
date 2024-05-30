@@ -13,6 +13,8 @@ import (
 
 	//"time"
 	"github.com/google/go-tpm-tools/simulator"
+	// "github.com/google/go-tpm/tpm2"
+	// "github.com/google/go-tpm/tpm2/transport"
 	"github.com/google/go-tpm/tpmutil"
 
 	//"github.com/cenkalti/backoff/v4"
@@ -45,10 +47,28 @@ func main() {
 	}
 	defer rwc.Close()
 
+	// optional session encryption using EK
+	// rwr := transport.FromReadWriter(rwc)
+	// createEKCmd := tpm2.CreatePrimary{
+	// 	PrimaryHandle: tpm2.TPMRHEndorsement,
+	// 	InPublic:      tpm2.New2B(tpm2.RSAEKTemplate),
+	// }
+	// createEKRsp, err := createEKCmd.Execute(rwr)
+	// if err != nil {
+	// 	fmt.Printf("can't acquire acquire ek %v", err)
+	//  return
+	// }
+	// encryptionPub, err := createEKRsp.OutPublic.Contents()
+	// if err != nil {
+	// 	fmt.Printf("can't create ekpub blob %v", err)
+	//  return
+	// }
+
 	randomBytes := make([]byte, 32)
 	r, err := tpmrand.NewTPMRand(&tpmrand.Reader{
 		TpmDevice: rwc,
-		//Encrypted: true,
+		// EncryptionHandle: createEKRsp.ObjectHandle,
+		// EncryptionPub:    encryptionPub,
 		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
 	if err != nil {

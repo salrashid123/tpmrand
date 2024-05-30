@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-tpm-tools/simulator"
+	"github.com/google/go-tpm/tpm2"
+	"github.com/google/go-tpm/tpm2/transport"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,10 +33,22 @@ func TestRandBytesEncrypted(t *testing.T) {
 	require.NoError(t, err)
 	defer tpmDevice.Close()
 
+	rwr := transport.FromReadWriter(tpmDevice)
+	createEKCmd := tpm2.CreatePrimary{
+		PrimaryHandle: tpm2.TPMRHEndorsement,
+		InPublic:      tpm2.New2B(tpm2.RSAEKTemplate),
+	}
+	createEKRsp, err := createEKCmd.Execute(rwr)
+	require.NoError(t, err)
+
+	encryptionPub, err := createEKRsp.OutPublic.Contents()
+	require.NoError(t, err)
+
 	randomBytes := make([]byte, 32)
 	r, err := NewTPMRand(&Reader{
-		TpmDevice: tpmDevice,
-		Encrypted: true,
+		TpmDevice:        tpmDevice,
+		EncryptionHandle: createEKRsp.ObjectHandle,
+		EncryptionPub:    encryptionPub,
 		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
 	require.NoError(t, err)

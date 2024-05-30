@@ -14,11 +14,12 @@ import (
 
 // Configuration parameters for the TPMRandReader.
 type Reader struct {
-	TpmDevice io.ReadWriteCloser // tpm device to use
-	Encrypted bool               // enable session encryption
-	Scheme    backoff.BackOff    // backoff retry scheme
-	mu        sync.Mutex
-	rwr       transport.TPM
+	TpmDevice        io.ReadWriteCloser // tpm device to use
+	Scheme           backoff.BackOff    // backoff retry scheme
+	EncryptionHandle tpm2.TPMHandle     // (optional) handle to use for transit encryption
+	EncryptionPub    *tpm2.TPMTPublic   // (optional) public key to use for transit encryption
+	mu               sync.Mutex
+	rwr              transport.TPM
 }
 
 // NewTPMRand returns go rand.Reader() from Trusted Platform Module (TPM)
@@ -45,11 +46,15 @@ func (r *Reader) Read(data []byte) (n int, err error) {
 	var result []byte
 	operation := func() (err error) {
 		var resp *tpm2.GetRandomResponse
-		if r.Encrypted {
-			resp, err = tpm2.GetRandom{BytesRequested: uint16(len(data))}.Execute(r.rwr, tpm2.HMAC(tpm2.TPMAlgSHA256, 16, tpm2.AESEncryption(128, tpm2.EncryptOut)))
+		var sess tpm2.Session
+		if r.EncryptionHandle != 0 && r.EncryptionPub != nil {
+			sess = tpm2.HMAC(tpm2.TPMAlgSHA256, 16, tpm2.AESEncryption(128, tpm2.EncryptOut), tpm2.Salted(r.EncryptionHandle, *r.EncryptionPub))
 		} else {
-			resp, err = tpm2.GetRandom{BytesRequested: uint16(len(data))}.Execute(r.rwr)
+			sess = tpm2.HMAC(tpm2.TPMAlgSHA256, 16, tpm2.AESEncryption(128, tpm2.EncryptOut))
 		}
+
+		resp, err = tpm2.GetRandom{BytesRequested: uint16(len(data))}.Execute(r.rwr, sess)
+
 		if err != nil {
 			return err
 		}

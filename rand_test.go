@@ -15,17 +15,28 @@ func TestRandBytes(t *testing.T) {
 	require.NoError(t, err)
 	defer tpmDevice.Close()
 
-	randomBytes := make([]byte, 32)
-	r, err := NewTPMRand(&Reader{
-		TpmDevice: tpmDevice,
-		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
-	})
-	require.NoError(t, err)
+	tests := []struct {
+		name string
+		size int
+	}{
+		{"small", 32},
+		{"large", 128},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			randomBytes := make([]byte, tc.size)
+			r, err := NewTPMRand(&Reader{
+				TpmDevice: tpmDevice,
+				//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
+			})
+			require.NoError(t, err)
 
-	i, err := r.Read(randomBytes)
-	require.NoError(t, err)
-	require.Equal(t, len(randomBytes), i)
-	require.Equal(t, len(randomBytes), 32)
+			i, err := r.Read(randomBytes)
+			require.NoError(t, err)
+			require.Equal(t, len(randomBytes), i)
+			require.Equal(t, len(randomBytes), tc.size)
+		})
+	}
 }
 
 func TestRandBytesEncrypted(t *testing.T) {
@@ -41,14 +52,10 @@ func TestRandBytesEncrypted(t *testing.T) {
 	createEKRsp, err := createEKCmd.Execute(rwr)
 	require.NoError(t, err)
 
-	encryptionPub, err := createEKRsp.OutPublic.Contents()
-	require.NoError(t, err)
-
 	randomBytes := make([]byte, 32)
 	r, err := NewTPMRand(&Reader{
 		TpmDevice:        tpmDevice,
 		EncryptionHandle: createEKRsp.ObjectHandle,
-		EncryptionPub:    encryptionPub,
 		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
 	require.NoError(t, err)

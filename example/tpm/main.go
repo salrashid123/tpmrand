@@ -12,9 +12,13 @@ import (
 	"slices"
 
 	//"time"
+
 	"github.com/google/go-tpm-tools/simulator"
+
 	// "github.com/google/go-tpm/tpm2"
 	// "github.com/google/go-tpm/tpm2/transport"
+	"github.com/google/go-tpm/tpm2"
+	"github.com/google/go-tpm/tpm2/transport"
 	"github.com/google/go-tpm/tpmutil"
 
 	//"github.com/cenkalti/backoff/v4"
@@ -31,7 +35,7 @@ func OpenTPM(path string) (io.ReadWriteCloser, error) {
 	if slices.Contains(TPMDEVICES, path) {
 		return tpmutil.OpenTPM(path)
 	} else if path == "simulator" {
-		return simulator.GetWithFixedSeedInsecure(1073741825)
+		return simulator.Get()
 	} else {
 		return net.Dial("tcp", path)
 	}
@@ -48,28 +52,29 @@ func main() {
 	defer rwc.Close()
 
 	// optional session encryption using EK
-	// rwr := transport.FromReadWriter(rwc)
-	// createEKCmd := tpm2.CreatePrimary{
-	// 	PrimaryHandle: tpm2.TPMRHEndorsement,
-	// 	InPublic:      tpm2.New2B(tpm2.RSAEKTemplate),
-	// }
-	// createEKRsp, err := createEKCmd.Execute(rwr)
-	// if err != nil {
-	// 	fmt.Printf("can't acquire acquire ek %v", err)
-	//  return
-	// }
-	// encryptionPub, err := createEKRsp.OutPublic.Contents()
-	// if err != nil {
-	// 	fmt.Printf("can't create ekpub blob %v", err)
-	//  return
-	// }
+	rwr := transport.FromReadWriter(rwc)
+	createEKCmd := tpm2.CreatePrimary{
+		PrimaryHandle: tpm2.TPMRHEndorsement,
+		InPublic:      tpm2.New2B(tpm2.RSAEKTemplate),
+	}
+	createEKRsp, err := createEKCmd.Execute(rwr)
+	if err != nil {
+		fmt.Printf("can't acquire acquire ek %v", err)
+		return
+	}
 
-	randomBytes := make([]byte, 32)
+	defer func() {
+		flushContextCmd := tpm2.FlushContext{
+			FlushHandle: createEKRsp.ObjectHandle,
+		}
+		_, _ = flushContextCmd.Execute(rwr)
+	}()
+
+	randomBytes := make([]byte, 128)
 	r, err := tpmrand.NewTPMRand(&tpmrand.Reader{
-		TpmDevice: rwc,
-		// EncryptionHandle: createEKRsp.ObjectHandle,
-		// EncryptionPub:    encryptionPub,
-		//Scheme:    backoff.NewConstantBackOff(time.Millisecond * 10),
+		TpmDevice:        rwc,
+		EncryptionHandle: createEKRsp.ObjectHandle,
+		//Scheme:           backoff.NewConstantBackOff(time.Millisecond * 10),
 	})
 	if err != nil {
 		fmt.Printf("%v\n", err)
